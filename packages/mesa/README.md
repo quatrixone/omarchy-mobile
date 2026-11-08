@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: MIT -->
 # mesa (Omarchy Mobile build)
 
-Arch Linux's Mesa 26.2.4 package, rebuilt for the Xiaomi Mi 8 (Adreno 630),
-Pixel 7 Pro, Pixel 6/6 Pro, and Pixel 9a. Mali-G710
+Arch Linux's Mesa 26.2.4 package, rebuilt for Qualcomm Adreno phones (Mi 8
+port in progress), the Pixel 7 Pro, Pixel 6/6 Pro, and Pixel 9a. Mali-G710
 (gs201) and Mali-G78 (gs101, with upstream's G68 next to it) are added to
 Panfrost's model table. Without an entry, Mesa
 rejects the GPU (for the G710 even when Panthor is loaded): the Gallium
