@@ -33,7 +33,7 @@ driver bails out on an unknown model, and PanVK returns
 - Only three split packages: `mesa`, `vulkan-panfrost` and
   `vulkan-mesa-implicit-layers` (which `vulkan-panfrost` depends on).
 - `pkgrel=1.5`. makepkg only accepts `integer[.integer]`, so the Omarchy Mobile
-  marker is in Mesa's version string instead: `26.2.4-arch1.1.5.omamobile4`.
+  marker is in Mesa's version string instead: `26.2.4-arch1.1.5.omamobile5`.
   That string shows up in `GL_VERSION` and in the `libgallium-*.so` file name.
 
 Freedreno supplies the Adreno DRI driver (`msm_dri.so`) needed by the Mi 8's
