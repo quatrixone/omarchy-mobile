@@ -1,0 +1,112 @@
+# SPDX-License-Identifier: 0BSD
+# Omarchy Mobile's Dipper-only Freedreno DRI driver.
+# Based on Arch Linux's Mesa PKGBUILD, tag 1-26.2.4-1 (0BSD).
+pkgname=mesa-freedreno-dipper
+pkgver=$(cat "${startdir:-.}/version")
+pkgrel=1
+epoch=1
+_pkgver=${pkgver/[a-z]/-&}
+_mesa_pkgrel=1.4
+_omamobile=omamobile4
+pkgdesc="Freedreno DRI driver for the Xiaomi Mi 8"
+arch=(aarch64)
+url="https://www.mesa3d.org/"
+license=("MIT AND BSD-3-Clause AND SGI-B-2.0")
+depends=("mesa=$epoch:$pkgver-$_mesa_pkgrel")
+makedepends=(
+  clang expat glibc libdisplay-info libdrm libelf libgcc libglvnd libva
+  libx11 libxcb libxext libxml2 libxrandr libxshmfence libxxf86vm llvm
+  llvm-libs lm_sensors spirv-llvm-translator spirv-tools systemd-libs
+  vulkan-icd-loader wayland xcb-util-keysyms zlib zstd cmake elfutils
+  glslang libclc meson python-mako python-packaging python-ply
+  python-pycparser python-yaml wayland-protocols xorgproto
+)
+options=(!lto)
+source=(
+  "https://archive.mesa3d.org/mesa-$_pkgver.tar.xz"
+  "https://archive.mesa3d.org/mesa-$_pkgver.tar.xz.sig"
+  0001-panfrost-add-Mali-G710-to-the-model-table.patch
+  0002-panfrost-don-t-make-image-BOs-private-on-panthor.patch
+  0003-panfrost-Advertise-Mali-G68-support.patch
+  0004-panfrost-add-Mali-G78-to-the-model-table.patch
+  0005-panfrost-backport-upstream-Mali-G715-model.patch
+  0006-pan-csf-backport-NOP-payload-type.patch
+  0007-pan-genxml-backport-v11-XML.patch
+  0008-panfrost-backport-shared-v11-build-support.patch
+  0009-panfrost-backport-v11-Gallium-support.patch
+  0010-panvk-backport-v11-support.patch
+)
+validpgpkeys=(
+  946D09B5E4C9845E63075FF1D961C596A7203456
+  71C4B75620BC75708B4BDB254C95FAAB3EB073EC
+  8703B6700E7EE06D7A39B8D6EDAE37B02CEB490D
+  57551DE15B968F6341C248F68D8E31AFC32428A6
+  A5CC9FEC93F2F837CB044912336909B6B25FADFA
+  E3E8F480C52ADD73B278EE78E1ECBE07D7D70895
+)
+sha256sums=(
+  bce5f7fbebb934373b86c999a064d52fb5065878dc57f287f95346648ec832e9
+  SKIP
+  1a6ac513fb44579f6ca72a2c92bb7fd86743a4a9dc01f452ac1ab93073100ce1
+  f064ce851d4898b87c95ea55c3367de9cdddb4e6a99e6ba89033e76dc9adecb8
+  edec51dfb5147de62aca0093bf2915d0cccf27e216f63ec8588064f18990ab3d
+  b4e6d7d29277cf4f11317968c26eb5c9f3fb89cd18f36615d45aa5d40134817a
+  203a853297c4d051559b0f398b5fd3db7fed8ec3874dfe745d0772d170d6e88e
+  833663f8ef6cc2820f373f0b376443f1f88664f7160849230c7eed9f07a1dbeb
+  4625e91fafc069e53f84f7fd1462b6ba20252adea7d9359f68e7a8f2e7e4e4e6
+  b1da04f12fb7b0d1ebe884481176f43fed7cbebd2d74d33ddfc6f1841900506a
+  ff7328fa6c2f8b0bf011d0d1a754bcdd044aa8278fe0951a19af5ac48c05c3ec
+  ed4f0d4e3b7dfee57234af6b85ba8c0c8c1f571cc55b84b832dd314610ac3c91
+)
+
+prepare() {
+  cd "mesa-$_pkgver"
+  local src
+  for src in "${source[@]}"; do
+    src=${src##*/}
+    [[ $src == *.patch ]] || continue
+    patch --fuzz=0 -Np1 < "../$src"
+  done
+  echo "$_pkgver-arch$epoch.$_mesa_pkgrel.$_omamobile" > VERSION
+}
+
+build() {
+  arch-meson "mesa-$_pkgver" build \
+    --optimization 2 \
+    -D android-libbacktrace=disabled \
+    -D b_ndebug=true \
+    -D gallium-drivers=freedreno \
+    -D gallium-extra-hud=true \
+    -D gallium-mediafoundation=disabled \
+    -D gallium-rusticl=false \
+    -D gallium-va=disabled \
+    -D gles1=disabled \
+    -D html-docs=disabled \
+    -D libunwind=disabled \
+    -D microsoft-clc=disabled \
+    -D valgrind=disabled \
+    -D video-codecs=all \
+    -D vulkan-drivers=[] \
+    -D vulkan-layers=[] \
+    -D vulkan-loader-rpath= \
+    -D vulkan-manifest-per-architecture=false
+  meson compile -C build
+}
+
+check() {
+  "$startdir/test/all"
+}
+
+package() {
+  local staging
+  staging=$(mktemp -d)
+  trap 'rm -rf "$staging"' RETURN
+  meson install -C build --destdir "$staging" --no-rebuild
+  local driver=$staging/usr/lib/dri/msm_dri.so
+  [[ -f $driver ]] || { echo "Freedreno did not install msm_dri.so" >&2; return 1; }
+  readelf -d "$driver" | grep -Fq "libgallium-$_pkgver-arch$epoch.$_mesa_pkgrel.$_omamobile.so" \
+    || { echo "msm_dri.so does not match the pinned Omarchy Mesa ABI" >&2; return 1; }
+  install -Dm755 "$driver" "$pkgdir/usr/lib/dri/msm_dri.so"
+  install -Dm644 "mesa-$_pkgver/docs/license.rst" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
