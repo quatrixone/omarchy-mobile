@@ -7,7 +7,7 @@ pkgrel=1
 epoch=1
 _pkgver=${pkgver/[a-z]/-&}
 _mesa_pkgrel=1.4
-_omamobile=omamobile4
+_omamobile=omamobile5-dipper
 pkgdesc="Freedreno DRI driver for the Xiaomi Mi 8"
 arch=(aarch64)
 url="https://www.mesa3d.org/"
@@ -104,7 +104,10 @@ package() {
   meson install -C build --destdir "$staging" --no-rebuild
   local driver=$staging/usr/lib/dri/msm_dri.so
   [[ -f $driver ]] || { echo "Freedreno did not install msm_dri.so" >&2; return 1; }
+  local gallium=$staging/usr/lib/libgallium-*.so
+  [[ -f $gallium ]] || { echo "Freedreno did not install libgallium" >&2; return 1; }
   install -Dm755 "$driver" "$pkgdir/usr/lib/dri/msm_dri.so"
+  install -Dm755 "$gallium" "$pkgdir/usr/lib/${gallium##*/}"
   install -Dm644 "mesa-$_pkgver/docs/license.rst" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

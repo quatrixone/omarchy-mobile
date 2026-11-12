@@ -6,8 +6,10 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 fail() { echo "not ok - $*" >&2; exit 1; }
 grep -Fq 'pkgname=mesa-freedreno-dipper' PKGBUILD || fail "package name"
 grep -Fq 'depends=("mesa=$epoch:$pkgver-$_mesa_pkgrel")' PKGBUILD || fail "exact Mesa ABI dependency"
+grep -Fq '_omamobile=omamobile5-dipper' PKGBUILD || fail "unique Dipper libgallium marker"
 grep -Fq -- '-D gallium-drivers=freedreno' PKGBUILD || fail "Freedreno-only build"
 grep -Fq 'usr/lib/dri/msm_dri.so' PKGBUILD || fail "Dipper-only driver payload"
+grep -Fq 'usr/lib/libgallium-' PKGBUILD || fail "matching Freedreno Gallium payload"
 for patch in ../mesa/*.patch; do [[ -f $patch ]] || fail "shared Mesa patch symlinks"; done
 if grep -Eq -- '-D gallium-drivers=.*(panfrost|llvmpipe|softpipe|zink)' PKGBUILD; then
   fail "non-Freedreno driver enabled"
