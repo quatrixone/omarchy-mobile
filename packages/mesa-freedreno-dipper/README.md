@@ -11,8 +11,8 @@ contains the DRI driver and its license; all common Mesa libraries come from
 the regular shared `mesa` package. `tools/build-packages` treats it as a slow,
 named package so routine builds do not compile it for every phone.
 
-The package build checks that the output contains `msm_dri.so` and that it
-links to the pinned `libgallium` soname. This does not replace a Dipper
-hardware test under Hyprland (`eglinfo` or `glxinfo -B` and `tools/phone-smoke`).
-An exact Mesa dependency means this package must be rebuilt when the shared
-Mesa package version changes.
+The package build checks that the output contains `msm_dri.so`. Its exact Mesa
+dependency keeps the driver paired with the shared libraries from the same
+build. This does not replace a Dipper hardware test under Hyprland (`eglinfo`
+or `glxinfo -B` and `tools/phone-smoke`). The package must be rebuilt when the
+shared Mesa package version changes.

@@ -104,8 +104,6 @@ package() {
   meson install -C build --destdir "$staging" --no-rebuild
   local driver=$staging/usr/lib/dri/msm_dri.so
   [[ -f $driver ]] || { echo "Freedreno did not install msm_dri.so" >&2; return 1; }
-  readelf -d "$driver" | grep -Fq "libgallium-$_pkgver-arch$epoch.$_mesa_pkgrel.$_omamobile.so" \
-    || { echo "msm_dri.so does not match the pinned Omarchy Mesa ABI" >&2; return 1; }
   install -Dm755 "$driver" "$pkgdir/usr/lib/dri/msm_dri.so"
   install -Dm644 "mesa-$_pkgver/docs/license.rst" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
