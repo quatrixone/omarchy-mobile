@@ -170,9 +170,11 @@ pass "a release on slot A with SLOT=a: both rows pass"
 fakeroot _a $A5; rows
 has 'not ok|1|boot|' && has 'on slot a: our builds boot from slot b' || fail "slot A without SLOT=a fails the boot row"
 pass "slot A without SLOT=a fails the boot row"
+fakeroot _b $B5
+printf 'SLOT="a"\n' > "$fr/etc/omamobile/boot-update.conf"
 mkdir -p "$fr/usr/share/omamobile"
-echo 'UFS_RW="boot_b init_boot_b vendor_boot_b vendor_kernel_boot_b dtbo_b userdata"' > "$fr/usr/share/omamobile/device.conf"
-fakeroot _b $B5; printf 'SLOT="a"\n' > "$fr/etc/omamobile/boot-update.conf"; rows
+echo 'UFS_RW="boot_b init_boot_b vendor_boot_b dtbo_b userdata"' > "$fr/usr/share/omamobile/device.conf"
+rows
 has 'not ok|1|boot|' && has 'on slot b: boot-update.conf says SLOT=a' || fail "SLOT=a booted from slot B (a fallback) fails the boot row"
 pass "SLOT=a booted from slot B (a fallback) fails the boot row"
 fakeroot _a $A5; printf 'SLOT=a\nSLOT=a\n' > "$fr/etc/omamobile/boot-update.conf"; rows
